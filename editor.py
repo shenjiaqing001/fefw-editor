@@ -31,7 +31,8 @@ from fefw_layer import (GRADES, ITEM_KINDS, SKILL_NAMES, SKILL_THRESHOLDS,  # no
                         STAT_NAMES, SaveError, SaveFile, live_convoy, set_convoy_item,
                         set_convoy_qty, default_save_dir, grade_label, grade_of,
                         is_enemy, is_shadow, is_slot_name, item_category, item_ids,
-                        item_kind, item_label, job_ids, job_name, next_threshold, pick_live)
+                        item_kind, item_label, job_ids, job_name, next_threshold, pick_live,
+                        unit_ids, unit_label)
 import fefw_layer as layer  # noqa: E402
 import supports  # noqa: E402  (support pair chart + conversation flags)
 import fefw_core as core  # noqa: E402  (save object tree: resizing edits)
@@ -343,7 +344,7 @@ class ItemPicker(ttk.Frame):
         show_internal = self.app.show_internal.get()
         hits = []
         for row in self.app.item_rows:
-            iid, meta, en, jp, k, cat, shadow, blob = row
+            iid, meta, label, jp, k, cat, shadow, blob = row
             if shadow and not show_internal:
                 continue
             if kind != "All types" and k != kind:
@@ -352,23 +353,23 @@ class ItemPicker(ttk.Frame):
                 continue
             if tokens and not all(t in blob for t in tokens):
                 continue
-            el = en.lower()
+            name = label.lower()
             if not q:
                 score = 3
-            elif el == q or f"{iid:08x}" == q:
+            elif name == q or f"{iid:08x}" == q:
                 score = 0
-            elif el.startswith(q):
+            elif name.startswith(q):
                 score = 1
-            elif re.search(r"\b" + re.escape(q), el):
+            elif re.search(r"\b" + re.escape(q), name):
                 score = 2
             else:
                 score = 3
-            hits.append((score, el, row))
+            hits.append((score, name, row))
         hits.sort(key=lambda h: (h[0], h[1]))
         prev = self.tree.selection()
         self.tree.delete(*self.tree.get_children())
-        for _s, _el, (iid, meta, en, jp, k, cat, shadow, blob) in hits[:self.MAX_ROWS]:
-            self.tree.insert("", "end", iid=f"{iid:08x}", text=" " + en,
+        for _s, _name, (iid, meta, label, jp, k, cat, shadow, blob) in hits[:self.MAX_ROWS]:
+            self.tree.insert("", "end", iid=f"{iid:08x}", text=" " + label,
                              image=self.app.item_icon(iid, meta, k),
                              values=(k, jp, f"{iid:08x}"))
         if prev and self.tree.exists(prev[0]):
@@ -793,10 +794,11 @@ class App(AdvancedMixin, tk.Tk):
     def _build_item_rows(self):
         rows = []
         for iid, meta in item_ids().items():
-            en = item_label(iid, meta)
+            label = item_label(iid, meta)
+            en = item_label(iid, meta, localized=False)
             jp = meta.get("jp") or ""
-            blob = f"{en} {jp} {iid:08x}".lower()
-            rows.append((iid, meta, en, jp, item_kind(meta), item_category(meta),
+            blob = f"{label} {en} {jp} {iid:08x}".lower()
+            rows.append((iid, meta, label, jp, item_kind(meta), item_category(meta),
                          is_shadow(meta), blob))
         rows.sort(key=lambda r: (r[2].lower(), r[0]))
         return rows
@@ -1392,12 +1394,13 @@ class App(AdvancedMixin, tk.Tk):
         n = 0
         for jp, rec in self._sup_chars():
             en = rec["en"] or jp
-            if q and q not in en.lower() and q not in jp.lower():
+            label = unit_label(core.id_hash("PID_" + jp), en)
+            if q and all(q not in name.lower() for name in (label, en, jp)):
                 continue
             if party is not None and ("PID_" + jp) not in party:
                 continue
             top = self._top_points(jp, points)
-            iid = self.sup_char_tree.insert("", "end", text=en,
+            iid = self.sup_char_tree.insert("", "end", text=label,
                                             values=(len(rec.get("partners") or []),
                                                     "" if top is None else f"{top:,}"))
             self._sup_rows[iid] = (jp, rec)
@@ -1423,10 +1426,11 @@ class App(AdvancedMixin, tk.Tk):
             return
         jp, rec = rows[sel[0]]
         en = rec["en"] or jp
+        label = unit_label(core.id_hash("PID_" + jp), en)
         if getattr(self, "_sup_char", None) != jp:
             self._sup_partner = None          # new character: don't keep the old partner
         self._sup_char = jp
-        self.sup_name.configure(text=en)
+        self.sup_name.configure(text=label)
         self.sup_avatar.show(en, "PID_" + jp)
 
         present = self._support_flags()
@@ -1444,15 +1448,16 @@ class App(AdvancedMixin, tk.Tk):
             if got:
                 seen_pairs += 1
             pts = pa["points"]
+            partner_label = unit_label(core.id_hash("PID_" + pa["jp"]), pa["en"])
             iid = self.sup_tree.insert(
-                "", "end", text=pa["en"],
+                "", "end", text=partner_label,
                 values=(pa["jp"],
                         "—" if pts is None else f"{pts:,}",
                         pa["chart"].get("max") or "—",
                         ", ".join(got) if got else "—",
                         "✓" if ("PID_" + pa["jp"]) in party else ""),
                 tags=("sup_seen",) if (got or pts) else ("sup_none",))
-            self._sup_pairs[iid] = ({"a_en": en, "b_en": pa["en"]},
+            self._sup_pairs[iid] = ({"a_en": label, "b_en": partner_label},
                                     dict(pa["chart"].get("flags") or {}))
             if pa["hash"] is not None:
                 self._sup_pt[iid] = (pa["hash"], pts, pa["jp"])
@@ -1912,7 +1917,8 @@ class App(AdvancedMixin, tk.Tk):
             enemy = is_enemy(u)
             if enemy and not self.show_enemies.get():
                 continue
-            if q and q not in f"{u.name} {u.pid} {u.job}".lower():
+            en = unit_ids().get(u.uid, {}).get("name") or ""
+            if q and q not in f"{u.name} {en} {u.pid} {u.job}".lower():
                 continue
             tree.insert("", "end", iid=str(u.uid), text=" " + u.name,
                         image=self._dot(_name_color(u.name), 10),
@@ -1974,7 +1980,7 @@ class App(AdvancedMixin, tk.Tk):
         if not u:
             self._clear_unit_form()
             return
-        self.avatar.show(u.name, u.pid)
+        self.avatar.show(unit_ids().get(u.uid, {}).get("name") or u.name, u.pid)
         self.unit_name.configure(text=u.name)
         pid = u.pid.replace("PID_", "")
         self.unit_sub.configure(text=f"{u.job}   ·   Level {u.level}   ·   {pid}")
@@ -2329,8 +2335,9 @@ class App(AdvancedMixin, tk.Tk):
             meta = names.get(row.iid, {})
             kind = item_kind(meta) if meta else "Item"
             label = item_label(row.iid, meta)
-            if q and not all(t in f"{label} {meta.get('jp', '')} {kind}".lower()
-                             for t in q.split()):
+            en = item_label(row.iid, meta, localized=False)
+            searchable = f"{label} {en} {meta.get('jp', '')} {kind}".lower()
+            if q and not all(t in searchable for t in q.split()):
                 continue
             tree.insert("", "end", iid=str(row.slot), text=f" {row.slot + 1:>4} · {label}",
                         image=self.item_icon(row.iid, meta, kind), values=(kind, row.qty))

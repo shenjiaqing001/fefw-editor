@@ -19,7 +19,7 @@ import fefw_core as core
 from fefw_save import *                      # noqa: F401,F403  (ids, labels, catalogue…)
 from fefw_save import (                      # noqa: F401
     Convoy, ConvoyRow, SaveError, SaveFile as _SaveFile, UnitRecord as _UnitRecord,
-    item_ids, item_label, is_enemy, unit_ids,
+    item_ids, item_label, is_enemy, unit_ids, unit_label,
 )
 
 # --------------------------------------------------------------------------
@@ -78,7 +78,7 @@ def _record(f: core.SaveFile, u: core.SaveUnit) -> UnitRecord:
     raw = f.u16(u.exp_off)
     into = raw - (lvl - 1) * 100
     rec = UnitRecord(base=u.start + 10, uid=u.person & 0xFFFFFFFF,
-                     pid=meta["pid"], name=meta.get("name") or meta["pid"],
+                     pid=meta["pid"], name=unit_label(u.person, meta.get("name") or meta["pid"]),
                      stats_off=u.start + 37, level_off=u.start + 59,
                      exp_off=u.start + 60, class_off=u.start + 14,
                      hp_off=u.start + 64, stats=list(u.stats), level=lvl,

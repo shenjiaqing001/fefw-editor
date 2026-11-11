@@ -11,6 +11,12 @@ library, or a ready-made Windows `.exe`.
 
 ![Units page](docs/units.png)
 
+## 简体中文名称
+
+人物、武器、道具和法术默认显示简中名称。物品保留强化等级，人物与物品可用原名搜索。暂未匹配到译名的条目沿用原名。
+
+译名参考 [角色图鉴](https://cn.fire-emblem-fw.site/characters.html)、[武器与道具图鉴](https://cn.fire-emblem-fw.site/items.html) 和 [101Leafy 的多语言资料](https://fe.mtwildwood.net/zh-hans/)。译名按编辑器原有 ID 关联，只用于显示和搜索。
+
 ## What you can edit
 
 | Page | Tab | What |

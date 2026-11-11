@@ -18,7 +18,7 @@ from tkinter import messagebox, ttk
 
 import fefw_core as core
 import supports
-from fefw_save import item_ids, item_label, unit_ids
+from fefw_save import item_ids, item_label, unit_ids, unit_label
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_NAME = "Fortune's Weave Save Editor"
@@ -111,7 +111,8 @@ def class_jp(cid: int) -> str:
 
 def unit_name(person: int) -> str:
     meta = unit_ids().get(person & 0xFFFFFFFF) or {}
-    return meta.get("name") or meta.get("pid") or "unknown 0x%08X" % (person & 0xFFFFFFFF)
+    original = meta.get("name") or meta.get("pid") or "unknown 0x%08X" % (person & 0xFFFFFFFF)
+    return unit_label(person, original)
 
 
 def rank_of(exp: int) -> int:
@@ -502,14 +503,14 @@ class AdvancedMixin:
         by_start = {u.start: u for u in f.units()}
         for u in f.units():
             meta = unit_ids().get(u.person & 0xFFFFFFFF) or {}
-            name = meta.get("name") or meta.get("pid") or "unknown 0x%08X" % (u.person & 0xFFFFFFFF)
+            name = unit_name(u.person)
             kind = (meta.get("kind") or "char")
             label = name + ("" if kind == "char" else f"  · {kind}")
-            rows.append((0 if kind == "char" else 1, label.lower(), u.start, label))
+            searchable = f"{label} {meta.get('name', '')} {meta.get('pid', '')}".lower()
+            if not q or q in searchable:
+                rows.append((0 if kind == "char" else 1, label.lower(), u.start, label))
         rows.sort()
         for _k, _s, start, label in rows:
-            if q and q not in label.lower():
-                continue
             u = by_start[start]
             lv = f.payload[u.level_off]
             iid = self.cls_unit_tree.insert("", "end", text=label, values=(lv,))
@@ -1529,7 +1530,8 @@ def remove_current_unit(self):
 def add_convoy_item_ui(self):
     if not self.sv:
         return
-    rows = [(h, layer.item_label(h, m), m.get("jp", "")) for h, m in layer.item_ids().items()]
+    rows = [(h, layer.item_label(h, m), f"{m.get('jp', '')} · {layer.item_label(h, m, localized=False)}")
+            for h, m in layer.item_ids().items()]
     rows.sort(key=lambda r: str(r[1]).lower())
     iid = self._picker("Add to the convoy", rows)
     if iid is None:

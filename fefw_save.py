@@ -45,6 +45,8 @@ import unicodedata
 
 import zstandard
 
+import names_zh_cn
+
 MAGIC = 0xCDEFBCDD
 HDR_FNV_START = 0x1F
 HDR_FNV_LEN = 0xE0
@@ -197,6 +199,10 @@ def unit_ids() -> dict[int, dict]:
             raw = json.load(fh)
         _UNIT_IDS = {int(k, 16): v for k, v in raw.items()}
     return _UNIT_IDS
+
+
+def unit_label(person: int, original: str) -> str:
+    return names_zh_cn.UNIT_NAMES.get(person & 0xFFFFFFFF, original)
 
 
 # --------------------------------------------------------------------------
@@ -1023,8 +1029,8 @@ def item_kind(meta: dict) -> str:
     return "Item"
 
 
-def item_label(iid: int, meta: dict | None = None) -> str:
-    """English name, with the forge level (+1, +2…) the Japanese name carries.
+def item_label(iid: int, meta: dict | None = None, *, localized: bool = True) -> str:
+    """Display name with the forge level (+1, +2…) the Japanese name carries.
 
     Many English names drop it, so "Silver Axe" would otherwise appear four
     times in a list with nothing to tell the copies apart.
@@ -1035,6 +1041,9 @@ def item_label(iid: int, meta: dict | None = None) -> str:
     en = unicodedata.normalize("NFKC", meta.get("en") or "").strip()
     jp = unicodedata.normalize("NFKC", meta.get("jp") or "").strip()
     m = re.search(r"\+(\d+)$", jp)
+    zh = names_zh_cn.ITEM_NAMES.get(iid) if localized else None
+    if zh:
+        return f"{zh} +{m.group(1)}" if m else zh
     base_jp = jp[:m.start()] if m else jp
     # forged copies take the base item's name, so "+1…+5" line up with it, and
     # half-translated names ("Poison 剣+1", "疾風 Sword") borrow a clean one
