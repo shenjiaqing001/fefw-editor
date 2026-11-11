@@ -1,12 +1,10 @@
-# Custom icons (optional)
+# 自定义图标（可选）
 
-The editor works without anything in here — items get a coloured dot by type and
-units get an initials badge. Drop PNG files in these folders to replace them.
+编辑器默认用不同颜色的圆点标记物品类别，并为人物显示姓名首字母徽标。把 PNG 文件放到下面的目录即可替换默认图标。
 
-| Folder | File name | Shown |
+| 目录 | 文件名 | 显示位置 |
 |---|---|---|
-| `items/` | the item id (`cac4f645.png`) **or** its English name in lower case with `_` for spaces (`iron_sword.png`) | next to the item in every list, scaled to ~22 px |
-| `units/` | the unit's name as the editor shows it (`Ishmael.png`) or the same in lower case (`ishmael.png`) | in the unit header, scaled to ~60 px |
+| `items/` | 物品 ID（`cac4f645.png`），或英文名转小写并用 `_` 替换空格（`iron_sword.png`） | 各物品列表中的名称旁，缩放至约 22 像素 |
+| `units/` | 人物的原英文名（如 `Eshmel.png`），或其小写形式（`eshmel.png`） | 人物详情顶部，缩放至约 60 像素 |
 
-Ids are shown in the *Id* column of the item catalogue. PNG only (Tk reads it
-natively); square images look best.
+物品 ID 可在物品目录的 *Id* 列查看。请使用 Tk 可直接读取的 PNG 格式，正方形图片的显示效果更好。

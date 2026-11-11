@@ -1,217 +1,154 @@
-# Fortune's Weave Save Editor
+# 《火焰纹章：万缕千丝》存档编辑器
 
-A save editor for **Fire Emblem: Fortune's Weave** saves made by the Eden
-Switch emulator. It edits your playthrough (units, items, convoy, gold, skills,
-flags) and leaves the game itself alone. Plain Python + Tkinter, one extra
-library, or a ready-made Windows `.exe`.
+用于编辑 Switch 模拟器 Eden 生成的 **《火焰纹章：万缕千丝》**存档。可以修改角色、物品、仓库、金钱、特技和标记。所有修改都写入存档。源码使用 Python 和 Tkinter，只需要安装一个额外的库。Windows 也可使用打包好的 `.exe`。
 
-> **Unofficial and reverse-engineered.** Close the game before saving and keep
-> your own backup. The first save next to each slot also keeps the untouched
-> original as `<slot>.bak`.
+> **本工具为非官方项目，根据逆向分析编写。** 写入存档前请先关闭游戏并自行备份。首次写入每个存档槽时，编辑器也会在该槽旁边保留一份原始存档 `<slot>.bak`。
 
-![Units page](docs/units.png)
+![人物页面](docs/units.png)
 
 ## 简体中文名称
 
 人物、武器、道具和法术默认显示简中名称。物品保留强化等级，人物与物品可用原名搜索。暂未匹配到译名的条目沿用原名。
 
-译名参考 [角色图鉴](https://cn.fire-emblem-fw.site/characters.html)、[武器与道具图鉴](https://cn.fire-emblem-fw.site/items.html) 和 [101Leafy 的多语言资料](https://fe.mtwildwood.net/zh-hans/)。译名按编辑器原有 ID 关联，只用于显示和搜索。
+译名按编辑器原有 ID 关联，只用于显示和搜索。[角色图鉴](https://cn.fire-emblem-fw.site/characters.html)、[武器与道具图鉴](https://cn.fire-emblem-fw.site/items.html)、[101Leafy 的多语言资料](https://fe.mtwildwood.net/zh-hans/)
 
-## What you can edit
+## 可以编辑哪些内容
 
-| Page | Tab | What |
+| 页面 | 标签页 | 可以编辑的内容 |
 |---|---|---|
-| **Units** | Stats | Level, EXP, max HP, and the points each of the nine stats has gained from level-ups (see *Stats* below) |
-| | Arts & skills | All six skill lists in the unit's record (equipped arts, equipped skills, arts known, everything learned…), by name, with add / remove |
-| | Inventory | Swap, add or remove a carried item, picked from a searchable catalogue. Known spells are listed separately |
-| | Class | Pick any class the game knows. It's added to the unit's own class list, the way the game does it |
-| **Convoy** | | Everything in storage, materials included: add a stack, swap the item in any row, change its quantity, remove a row, and repair a list damaged by older versions |
-| **Gold** | | Set gold |
-| **Player** | | Gold, renown exp and Karma Shards; difficulty, mode and playthrough number |
-| **Classes** | | A unit's whole class list (set the current class, add, swap or remove one) and its weapon masteries with their rank (E … S+) and exp |
-| **Supports** | | Every character's support partners with the **points** this save holds for the pair, the highest rank the game defines, and which conversations this save has recorded. Set the points (0 … 3200) and the game works the level out from them. **Record conversation as seen** writes that conversation's flag |
-| **Mounts** | | The battalion and mount each unit carries, chosen from the save's pool |
-| **Flags** | | Every named variable the save stores: support conversations, recruited / met, achievements, feature and class unlocks. Search, filter, set, add, remove |
+| **人物（Units）** | 能力值（Stats） | 等级、经验值、最大 HP，以及九项能力各自通过升级获得的点数。详见下方的「能力值」。 |
+| | 战技与特技（Arts & skills） | 按名称查看、添加或移除角色记录里的六组战技和特技，包括已装备战技、已装备特技、已掌握战技和全部已习得项目等。 |
+| | 随身物品（Inventory） | 从可搜索的物品目录中选择物品，替换、添加或移除随身物品。已习得的法术单独列出。 |
+| | 职业（Class） | 选择游戏中的任一职业。编辑器会按游戏使用的方式将它加入角色的职业列表。 |
+| **仓库（Convoy）** | | 管理仓库里的所有物品，包括素材。可新增一组物品、替换指定行的物品、修改数量、移除某一行，以及修复被旧版本损坏的仓库列表。 |
+| **金钱（Gold）** | | 设置金钱。 |
+| **玩家（Player）** | | 金钱、名声经验值、因果碎片（Karma Shards），以及难度、模式和周目。 |
+| **职业（Classes）** | | 编辑角色的完整职业列表，可设置当前职业、添加、替换或移除职业。还可编辑武器熟练度的等级（E 至 S+）和经验值。 |
+| **支援（Supports）** | | 查看每位角色的支援伙伴、该组合在存档中的**支援点数**、游戏设定的最高支援等级，以及已记录的对话。支援点数可设为 0 至 3200，游戏会据此计算等级。**Record conversation as seen** 会写入对应的对话标记。 |
+| **坐骑（Mounts）** | | 为每位角色从存档的可用列表中选择骑士团和坐骑。 |
+| **标记（Flags）** | | 搜索、筛选、设置、添加或移除存档中的命名变量，包括支援对话、已招募或已见面状态、成就、功能解锁和职业解锁。 |
 
-Units can also be **copied in** from another slot or **removed**. Every edit can
-be undone (Ctrl+Z / Ctrl+Y), and **Snapshot** / **Restore…** keep copies of the
-whole save folder.
+也可以从其他存档槽**复制角色**，或**移除角色**。可通过 Ctrl+Z 撤销、Ctrl+Y 重做。**快照（Snapshot）**和**恢复（Restore…）**用于备份和恢复整个存档目录。
 
-### Stats
+### 能力值
 
-The nine stored numbers are what a unit has **gained from level-ups**. The game
-adds the class and personal bases (and stat-up items) on top, so the editor's
-numbers are lower than the unit screen; raising one raises the in-game stat by
-the same amount. Max HP is stored separately and always equals a fixed base
-plus the HP gained, so changing HP gained moves max HP with it.
+存档中的九项数值是角色**通过升级获得的点数**。游戏还会叠加职业基础值、个人基础值和能力提升道具的加成，所以编辑器显示的数值低于游戏的角色面板。编辑器中增加多少点，对应的游戏内能力就增加多少点。最大 HP 单独存储，等于固定基础值加上升级获得的 HP。修改升级获得的 HP 时，最大 HP 也会随之调整。
 
-### Not supported (yet)
+### 暂未支持
 
+- **总能力值和能力提升道具的加成。** 详见上方的「能力值」。
+- **移动力。** 每个角色有各自的移动力，目前尚未确定其存储位置。
+- **武器等级奖励和特技效果。** 提升武器等级只修改等级字母。添加特技后，职业和等级条件仍决定效果能否生效。编辑器也不会发放在游戏中正常达到该武器等级时获得的特技或战技。
 
-* **Total stats and stat-up item bonuses.** See *Stats* above.
-* **Movement.** Units have their own movement values; where they're stored isn't
-  known yet.
-* **Weapon-rank rewards and skill effects.** Raising a rank only changes the
-  letter, and adding a skill doesn't grant an effect the class or level wouldn't
-  allow. Skills and arts the game hands out when a rank is reached in play are
-  not added.
+如果你知道这些数据的存储位置，欢迎贡献。
 
-If you know where any of these live, contributions are welcome.
+## 下载
 
-## Download
+可从上游项目下载最新构建。[Releases](https://github.com/Antiadvocate/fefw-editor/releases/latest)
 
-Get the latest build from the
-[**Releases page**](https://github.com/Antiadvocate/fefw-editor/releases/latest):
+- **Windows** 使用 `FEFW-Save-Editor-<version>-windows.zip`。解压到有写入权限的目录，再运行 `FEFW Save Editor.exe`，无需安装 Python。可执行文件未签名，SmartScreen 可能会要求选择「更多信息 → 仍要运行」（*More info → Run anyway*）。
+- **其他系统** 使用 `…-source.zip`，然后按下方的「从源码运行」操作。
 
-* **Windows:** `FEFW-Save-Editor-<version>-windows.zip`. Unzip it anywhere you
-  can write to and run `FEFW Save Editor.exe`; no Python needed. The exe isn't
-  code-signed, so SmartScreen may ask you to click *More info → Run anyway*.
-* **Anything else:** `…-source.zip`, then see *Running from source*.
+## 从源码运行
 
-## Running from source
+需要 Python 3.10 或更高版本。
 
 ```
 pip install -r requirements.txt
 python editor.py
 ```
 
-or double-click **FEFW Save Editor.bat** on Windows. Python 3.10+. You can also
-pass a save folder (or any slot file in it): `python editor.py "C:\path\to\save"`.
+Windows 也可以双击 **FEFW Save Editor.bat**。启动时可以传入存档目录，或该目录中的任一存档文件，例如 `python editor.py "C:\path\to\save"`。
 
-## Finding your save
+## 查找存档
 
 ```
 %APPDATA%\eden\nand\user\save\<play-uid>\<account>\04007EF01F8AE000\000\
 ```
 
-The editor finds this on its own and remembers the last folder you opened.
-Otherwise use **Open folder…** and pick any slot file inside it.
+编辑器会自动查找该路径，并记住上次打开的目录。也可以使用 **Open folder…**，选择目标目录里的任一存档文件。
 
-## How saving works
+## 存档写入规则
 
-* **The slots.** `Auto` is your latest save on whichever lord's route you last
-  played, and it opens first. `Route_<lord>` (e.g. `Route_Ism`) holds that
-  lord's route while you play someone else. `Chapter_<lord>_<part>_<chapter>`
-  are chapter checkpoints, the points the game's "go back in time" feature
-  returns to. `Global` holds settings only. The slot list shows the lord, part
-  and chapter each slot was saved in (e.g. `★ Auto · Theodora P1 Ch12`), read
-  from the save itself; ★ marks `Auto`.
-* **Edit `Auto`.** It's the save the game continues from, so editing it alone is
-  enough.
-* **Only the live data is changed.** `Auto` also carries its own copies of
-  earlier points (the chapter start and, mid-battle, older states). Edits go to
-  the live unit, convoy and gold; those copies keep their values, so rewinding
-  still takes you back to what was really there. Run settings (difficulty, mode,
-  playthrough number) are the exception: they apply to the whole run and are
-  written into every copy.
-* **"Also edit this route's other saves"** (off by default) also writes each edit
-  into the same route's other live saves, e.g. that lord's `Route_*`. Another
-  lord's route and every `Chapter_*` checkpoint are never touched. Open a
-  checkpoint to edit it on its own.
-* **Nothing is written until you press Save** (Ctrl+S). Slots with unsaved
-  edits get a ● in the slot list, and quitting with unsaved edits asks first.
-* **Reload (F5)** re-reads every slot from disk. When you switch back to the
-  editor, a slot the game saved since is re-read on its own if you haven't
-  edited it; if you have, Save warns you before overwriting the game's newer
-  save.
-* **Snapshots** are stored in a `_snapshots` folder next to your slots.
+- **存档槽。** `Auto` 是你最近游玩的主角路线的最新存档，打开目录时会优先选中。`Route_<lord>`（例如 `Route_Ism`）保存对应主角路线的进度，供切换至其他主角路线时保留。`Chapter_<lord>_<part>_<chapter>` 是章节检查点，游戏的回溯功能会回到这些时间点。`Global` 只保存设置。存档列表会从文件中读取并显示主角、篇章和章节，例如 `★ Auto · Theodora P1 Ch12`，其中 ★ 标记 `Auto`。
+- **修改 `Auto`。** 游戏会从这个存档继续，通常只需修改这一槽。
+- **当前进度与回溯数据。** `Auto` 也会保存章节开头和战斗中的较早状态。角色、仓库和金钱的修改只应用到当前进度，回溯时仍会读到当时的数值。难度、模式和周目适用于整轮游戏，因此会同步写入每份副本。
+- **Also edit this route's other saves** 默认关闭。启用后，每次修改也会应用到同一路线的其他当前进度存档，例如该主角的 `Route_*`。同步范围限于当前路线的非检查点存档。需要修改某个 `Chapter_*` 检查点时，请单独打开它。
+- **按下 Save（Ctrl+S）才会写入文件。** 有未保存修改的槽会在列表中标上 ●。退出时若有未保存的修改，编辑器会先询问。
+- **Reload（F5）** 会从磁盘重新读取所有存档槽。切回编辑器时，如果游戏更新了某个槽且编辑器里没有待保存的修改，该槽会自动重读。如果同一个槽已有待保存的修改，覆盖游戏的新存档前会提示。
+- **快照**保存在存档槽旁的 `_snapshots` 目录。
 
-Lists grow and shrink safely: the save is a tree of records that point at each
-other, and when a list changes size every pointer after it is rewritten and the
-result is read back before anything is written.
+存档由相互引用的记录组成。列表长度变化时，编辑器会重写该列表之后的指针，并在写入前回读结果。
 
-![Convoy page](docs/convoy.png)
+![仓库页面](docs/convoy.png)
 
-## The convoy
+## 仓库
 
-The convoy is a fixed row of 1329 slots, materials included. **Add item…** puts
-a stack into the first empty slot and **Remove** empties a slot, the way the
-game deposits and withdraws, so the list always keeps its 1329 slots.
+仓库固定有 1329 个槽位，包含素材。**Add item…** 将一组物品放入第一个空位，**Remove** 清空所选槽位。两者对应游戏中的存入和取出操作，槽位总数始终为 1329。
 
-**Damaged lists.** Versions before 1.2 did "Add" by writing an item over empty
-slots, which knocked the rest of the list out of line so the game couldn't read
-it (materials stored after that point seemed to vanish). The Convoy page detects
-such a list and offers **Repair convoy**: it rebuilds a clean list with every
-item it can still find. Undo works, and the original stays in the slot's `.bak`.
+**修复损坏的仓库。** 1.2 以前的版本在新增物品时会直接覆盖空槽记录，使后续数据错位，游戏因此无法读取列表，排在该位置之后的素材看起来也会消失。仓库页面检测到这类问题时会提供 **Repair convoy**，用还能找到的物品重建列表。修复操作可撤销，原始存档也会保留在该槽的 `.bak` 文件中。
 
-## Finding items and skills
+## 查找物品和特技
 
-The catalogues search English name, Japanese name and id as you type; every word
-must match, so `silver bow` or `+3 sword` narrow it down. The item catalogue has
-a **Type** filter (Sword, Lance, Tome, Accessory…), and forged copies show their
-level (`Silver Axe +2`) even where the game's English text leaves it out. When
-you pick an inventory slot, only items of the same kind are offered; tick *Allow
-any item type* to override. The skill picker lists skills with an English name
-first.
+目录会随着输入即时筛选，可用英文名、日文名或 ID 搜索。已有译名的物品也支持中文搜索。每个词都须匹配，例如 `silver bow`、`+3 sword` 或 `铁剑 +3`。物品目录提供 **Type** 筛选，可选剑、枪、魔法书、饰品等。即使游戏的英文名省略了强化等级，目录也会显示，例如 `银斧 +2`。选中随身物品槽后，目录默认只显示同类物品。勾选 **Allow any item type** 可查看其他类别。特技选择器优先列出有英文名的特技。
 
-**Icons:** items get a coloured dot by type and units an initials badge. Drop
-PNGs into `icons/items/` and `icons/units/` to use real images; see
-[icons/README.md](icons/README.md).
+**图标。** 物品默认显示按类别着色的圆点，人物默认显示姓名首字母徽标。可以把 PNG 放进 `icons/items/` 和 `icons/units/`，替换默认图标。[自定义图标说明](icons/README.md)
 
-![Arts & skills tab](docs/skills.png)
+![战技与特技标签页](docs/skills.png)
 
-## Keyboard
+## 快捷键
 
-| Key | Does |
+| 按键 | 操作 |
 |---|---|
-| Ctrl+S | Save every changed slot |
-| Ctrl+Z / Ctrl+Y | Undo / redo |
-| Ctrl+O | Open a save folder |
-| Ctrl+F | Jump to the search box on the current page |
-| F5 | Reload every slot from disk (asks first if you have unsaved edits) |
-| Enter / double-click | Use the selected catalogue item |
+| Ctrl+S | 保存所有修改过的存档槽 |
+| Ctrl+Z / Ctrl+Y | 撤销 / 重做 |
+| Ctrl+O | 打开存档目录 |
+| Ctrl+F | 跳到当前页面的搜索框 |
+| F5 | 从磁盘重新读取所有存档槽。有未保存修改时会先询问。 |
+| Enter / 双击 | 使用目录中选中的物品 |
 
-## Known limits
+## 已知限制
 
-* Changing a class writes the class id and the unit's class list; usable weapons
-  and class skills that come with a class are not recalculated.
-* EXP is a running total (`(level - 1) × 100 + EXP into the level`); the editor
-  shows and writes the part inside the level, 0–99.
-* Renown is stored as exp. Which level that is comes from the game's own
-  tables, so the editor shows exp, not a level.
-* A flag whose name isn't in the game's data files shows as `unknown 0x…`. It's a
-  real flag that nothing in the data names (roughly 40% of a mid-game save's
-  flags resolve).
-* Enemy and NPC records can be viewed but not edited; their layout is only partly
-  known.
-* Built and tested against saves from one game version. Another version may need
-  the name tables rebuilt; unknown ids then show as `unknown <hash>`.
+- 更换职业会写入职业 ID 和角色的职业列表。职业附带的可用武器和职业特技不会重新计算。
+- 经验值按累计值存储（`(level - 1) × 100 + EXP into the level`）。编辑器显示和写入当前等级内的经验值，范围为 0 至 99。
+- 名声以经验值存储，等级由游戏自己的数据表换算。编辑器显示名声经验值。
+- 游戏数据中没有名称的标记会显示为 `unknown 0x…`。这些标记确实存在，游戏数据里只有约 40% 的游戏中期存档标记可以查到名称。
+- 敌人和 NPC 的记录可查看。由于其结构只解析了一部分，编辑功能限于支持的角色记录。
+- 工具基于一个游戏版本的存档开发和测试。其他版本可能需要重新生成名称表，尚未收录的 ID 会显示为 `unknown <hash>`。
 
-## Files
+## 项目文件
 
 ```
-editor.py            the GUI
-editor_advanced.py   Arts & skills, Player, Classes, Supports, Flags and Mounts pages
-fefw_core.py         the save's record tree: blocks, units, resizing edits, convoy, mounts, flags
-fefw_layer.py        what the GUI uses: units, items, skills, convoy and gold through fefw_core
-fefw_save.py         save container (decompress, checksums, write), ids and labels, small CLI
-supports.py          support pair chart, conversation-flag and support-point lookup
-unit_ids.json        person id -> name
-item_ids.json        item id   -> Japanese + English name
-job_ids.json         class id  -> Japanese + English name
-skill_ids.json       skill id  -> Japanese + English name
-supports.json        support pair -> highest rank and its conversation flags
-support_points.json  support pair hash -> the two characters it joins (2628 pairs)
-flag_names.json      flag id   -> readable name
-build_skill_ids.py   rebuilds skill_ids.json from a romfs dump
-build_item_names.py  puts the game's official English item names into item_ids.json
-build_unit_names.py  English names for generic units, enemies and NPCs in unit_ids.json
-msbt.py              reads the game's message files (used by the build scripts)
-build_flag_names.py  rebuilds flag_names.json from a romfs dump
-icons/               optional item / unit images
-requirements.txt     zstandard
-FEFW Save Editor.bat launcher (source install)
-.github/workflows/   release build
+editor.py            图形界面
+editor_advanced.py   战技与特技、玩家、职业、支援、标记和坐骑页面
+fefw_core.py         存档记录树，包括数据块、角色、列表扩缩、仓库、坐骑和标记
+fefw_layer.py        图形界面调用层，通过 fefw_core 读写角色、物品、特技、仓库和金钱
+fefw_save.py         存档容器的解压、校验和写入，以及 ID、显示名称和简易命令行
+supports.py          查询支援组合、对话标记和支援点数
+unit_ids.json        人物 ID → 名称
+item_ids.json        物品 ID → 日文名和英文名
+job_ids.json         职业 ID → 日文名和英文名
+skill_ids.json       特技 ID → 日文名和英文名
+names_zh_cn.py       人物和物品 ID → 简体中文名称
+supports.json        支援组合 → 最高支援等级和对应的对话标记
+support_points.json  支援组合哈希 → 对应的两名角色（共 2628 对）
+flag_names.json      标记 ID → 可读名称
+build_skill_ids.py   根据 RomFS 导出文件重新生成 skill_ids.json
+build_item_names.py  将游戏的官方英文物品名写入 item_ids.json
+build_unit_names.py  为 unit_ids.json 中的通用角色、敌人和 NPC 补充英文名
+msbt.py              读取游戏的文本文件，供名称表生成脚本使用
+build_flag_names.py  根据 RomFS 导出文件重新生成 flag_names.json
+icons/               可选的人物与物品图标
+requirements.txt     zstandard 依赖
+FEFW Save Editor.bat 从源码安装时使用的启动脚本
+.github/workflows/   发布构建工作流
 ```
 
-`editor_settings.json` (theme, last folder, options) is created next to the
-editor, or next to the `.exe`, on first use.
+首次使用时，`editor_settings.json` 会生成在编辑器或 `.exe` 所在目录，用于保存主题、上次打开的目录和其他选项。
 
-### Rebuilding the name tables
+### 重新生成名称表
 
-The `.json` name tables come from the game's own data. To rebuild them for a
-different game version, point the scripts at a romfs dump of your own copy of
-the game:
+`.json` 名称表来自游戏数据。要为其他游戏版本重新生成名称表，可将自己持有的游戏副本的 RomFS 导出目录传给脚本。
 
 ```
 python build_item_names.py <romfs folder>
@@ -220,27 +157,17 @@ python build_skill_ids.py <romfs folder>
 python build_flag_names.py <romfs folder>/GameData
 ```
 
-`build_item_names.py` replaces the English item names (until now translated
-from the Japanese ids, e.g. "Augus' teff") with the game's own English text
-("Orgus Coffee"), matched through the game's message files. Items the game's
-text never names (cut content, cutscene props) get hand translations.
-`build_unit_names.py` names the generic soldiers, enemies and NPCs whose ids are
-Japanese (`EN_女斧盗賊2` → "Axe Thief (female, 2)") from the class, people and
-place names in the same files.
+`build_item_names.py` 通过游戏文本文件匹配官方英文名，替换先前由日文 ID 译出的物品名，例如将 `Augus' teff` 更新为 `Orgus Coffee`。删减内容、过场道具等缺少游戏内名称的条目使用人工翻译。
 
-## Making a release
+`build_unit_names.py` 从同一批文件里的职业名、人名和地名生成通用士兵、敌人和 NPC 的英文名，例如将 `EN_女斧盗賊2` 对应到 `Axe Thief (female, 2)`。
 
-1. Bump `__version__` in `editor.py` (e.g. `"1.2.1"`) and merge to `main`.
-2. Actions → **Release** → *Run workflow*, and enter the matching tag
-   (`v1.2.1`). Pushing that tag works too.
+## 构建发行版
 
-The workflow ([.github/workflows/release.yml](.github/workflows/release.yml))
-checks the tag matches `__version__`, builds the Windows `.exe` with
-PyInstaller, zips it with the README and the `icons/` folder, adds a source zip
-and publishes the release.
+1. 更新 `editor.py` 中的 `__version__`（例如 `"1.2.1"`），并合并到 `main`。
+2. 在 Actions → **Release** 中选择 *Run workflow*，输入对应的标签（`v1.2.1`）。也可直接推送该标签。
 
-## Disclaimer
+工作流会检查标签与 `__version__` 是否一致，通过 PyInstaller 构建 Windows `.exe`，将其与 README 和 `icons/` 目录一起压缩，再附上源码压缩包并发布。[发布工作流](.github/workflows/release.yml)
 
-No warranty. Editing saves can corrupt them, and this was built by studying a
-handful of save files; behaviour may differ on other game versions. Keep your
-own backups.
+## 免责声明
+
+本工具不提供任何保证。修改存档有可能造成损坏。工具根据少量存档样本开发，在其他游戏版本上的表现可能有差异，请保留自己的备份。
